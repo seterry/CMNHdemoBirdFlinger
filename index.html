@@ -64,7 +64,7 @@
 			x = 0;
 			while (x < this.game.width*2) {
 				brick = this.add.sprite(x, this.game.height, 'brick');
-				brick.y = brick.y - brick.height;
+				brick.y = brick.y - brick.height/2.0;
 				this.physics.enable(brick, Phaser.Physics.ARCADE);
 				brick.body.allowGravity = false;
 				brick.body.immovable = true;
