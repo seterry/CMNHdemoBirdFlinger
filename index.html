@@ -2,7 +2,7 @@
 <html>
     <head>
         <meta charset="UTF-8" />
-        <title>Fling the Bird</title>
+        <title>Happy Bees</title>
         <style type="text/css">
             body{
                 margin: 0;
@@ -27,6 +27,8 @@
 		this.vx;
 		this.vy;
 		this.floorbricks;
+		this.lastbeex;
+		this.lastbeey;
 	};
 	
 	TheGame.PlayState.prototype = {
@@ -34,6 +36,19 @@
 			this.load.image('happybee', 'assets/happybee.png');
             this.load.image('brick', '/assets/brickblock.png');
 		},
+		
+        checkForEnd: function() {
+            if (TheGame.beestate != 3) return;
+
+			if ((Math.abs(this.bee.x - this.lastbeex) < 1) && 
+				(Math.abs(this.bee.y - this.lastbeey) < 1)) {
+				TheGame.beestate = 0;				    
+			}
+			
+			this.lastbeex = this.bee.x;
+			this.lastbeey = this.bee.y;
+        },
+		
 		
 		create: function () {
 		
@@ -62,16 +77,31 @@
 			// Floor
 			this.floorbricks = this.add.physicsGroup();
 			x = 0;
+			lastx = 0;
+			lasty = 0;
 			while (x < this.game.width*2) {
 				brick = this.add.sprite(x, this.game.height, 'brick');
 				brick.y = brick.y - brick.height/2.0;
 				this.physics.enable(brick, Phaser.Physics.ARCADE);
 				brick.body.allowGravity = false;
 				brick.body.immovable = true;
+				brick.body.friction = new Phaser.Point(10, 10);
 				this.floorbricks.add(brick);
+				lastx = x;
+				lasty = brick.y;
 				x = x + brick.width;
 			}
+
+			while (lasty > 0) {
+				brick = this.add.sprite(lastx, lasty, 'brick');
+				this.physics.enable(brick, Phaser.Physics.ARCADE);
+				brick.body.allowGravity = false;
+				brick.body.immovable = true;
+				this.floorbricks.add(brick);
+				lasty = lasty - brick.height;
+			}	
 			
+            this.game.time.events.loop(Phaser.Timer.SECOND * 2, this.checkForEnd, this);
 			
 			this.game.input.onUp.add(function() {
 				if (TheGame.beestate == 1) TheGame.beestate = 2;
@@ -83,16 +113,20 @@
 	
 		},
 		
+		collisionHandlerFloor: function(bee, floor) {
+			bee.body.velocity.x *= 0.9;
+		},
 		
 		update: function() {
 		
-			if (this.physics.arcade.collide(this.bee, this.floorbricks, null, null, this)) {
+			if (this.physics.arcade.collide(this.bee, this.floorbricks, this.collisionHandlerFloor, null, this)) {
 			}
 		
     		ox = 180;
     		oy = 180;
 
-			if (TheGame.beestate == 0) {		
+			if (TheGame.beestate == 0) {	
+				this.bee.body.moves = false;
 				this.graphics.clear();
 				this.bee.x = ox;
 				this.bee.y = oy;
@@ -100,7 +134,7 @@
 			
 			if (TheGame.beestate == 1) {		
 				this.graphics.clear();
-				this.graphics.lineStyle(2, 0xffd900, 1);
+				this.graphics.lineStyle(4, 0xffd900, 1);
 			
 				x = this.game.input.x;
 				y = this.game.input.y;
@@ -131,11 +165,22 @@
 				this.bee.body.velocity.x = this.vx * 10;
 				this.bee.body.velocity.y = this.vy * 10;
 				
+				this.lastbeex = this.bee.x;
+				this.lastbeey = this.bee.y;
+				
 				TheGame.beestate = 3;
 			}	
 			
 			if (TheGame.beestate == 3) {
 				// Flying
+				if (this.bee.x < 0) {
+					TheGame.beestate = 0;
+				}				
+				
+				if (this.bee.x > this.game.width*2) {
+					TheGame.beestate = 0;
+				}				
+				
 			}
 		}
 		
