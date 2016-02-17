@@ -2,7 +2,7 @@
 <html>
     <head>
         <meta charset="UTF-8" />
-        <title>Save our Planet</title>
+        <title>Fling the Bird</title>
         <style type="text/css">
             body{
                 margin: 0;
@@ -17,205 +17,137 @@
     </head>
     <body>
         <script type="text/javascript">
-            
-        TheGame.PlayState = function(game) {
-            this.cursors;
-            this.levels;
-            this.bricks;
-            this.dude;
-            this.facing;
-            this.jumpButton;
-            this.jumpTimer;
-            this.coins;
-            this.scoretext;
-            this.score;
-            this.sfx;
-        };
         
-        TheGame.PlayState.prototype = {
-            preload: function () {
-                this.load.image('brick', 'assets/brickblock.png');
-                this.load.image('question', 'assets/questionblock.png');
-                this.load.spritesheet('dude', 'assets/dude.png', 32, 48);
-                this.load.spritesheet('coin', 'assets/spincoin.png', 64, 64);
-                
-                this.load.audio('sfx', 'assets/coin.mp3');
+    TheGame.beestate = 0;
 
-
-            },
-                  
-            create: function () {
-            	this.score = 0;
-                this.scoretext = this.add.text(0, 20, "Score: 0", {
-                                  font: "55px Arial",
-                                  fill: "#00ff14",
-                                  align: "left"
-                                  });
-                this.scoretext.setTextBounds(16, 16, this.game.width, this.game.height);
-                this.scoretext.anchor.set(0.0, 0.5);
-                this.scoretext.fixedToCamera = true;
-                        
-            	this.world.setBounds(0, 0, this.game.width*2, this.game.height);
-            	this.physics.startSystem(Phaser.Physics.ARCADE);
-            	this.time.desiredFps = 30;
-            	this.physics.arcade.gravity.y = 250;
-            	
-                this.sfx = this.add.audio('sfx');
-            	this.sfx.allowMultiple = true;
-                this.sfx.addMarker('zap', 0, 0.5);
-
-            	            	
-            	this.jumpTimer = 0;
-            	
-            	this.dude = this.add.sprite(32, 48, 'dude');
-            	this.physics.enable(this.dude, Phaser.Physics.ARCADE);
-            	this.dude.body.bounce.y = 0.2;
-            	this.dude.body.collideWorldBounds = true;
-            	this.dude.body.setSize(20, 32, 5, 16);
-            	this.dude.animations.add('left', [0, 1, 2, 3], 10, true);
-            	this.dude.animations.add('turn', [4], 20, true);
-            	this.dude.animations.add('right', [5, 6, 7, 8], 10, true);
-            	this.camera.follow(this.dude, Phaser.Camera.FOLLOW_PLATFORMER);
-            
-            
-            	this.bricks = this.add.physicsGroup();
-            	this.coins = this.add.physicsGroup();
-            	
-            	this.levels = [" C   ??B   BB?B? ?BB CB?B",
-            				   "    BBBB??C?B??? BB?B?B??",
-            	               "BBB????B?? B?B???B?B?????"];
-
-                this.cursors = this.input.keyboard.createCursorKeys();
-    			this.jumpButton = this.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
-                           
-                y = this.game.height;
-                for ( var level = this.levels.length - 1; level >= 0; level-- ) {
-                	x = 0;
-					for ( var i = 0; i < this.levels[level].length; i++ ) {
-						c = this.levels[level].charAt(i);
-						brick = null;
-						coin = null;
-						if (c=='B') {
-							brick = this.add.sprite(x, y, 'brick');
-							//brick.y = brick.y - brick.height;
-							//this.bricks.add(brick);
-						} else if (c=='?') {
-							brick = this.add.sprite(x, y, 'question');
-							//brick.y = brick.y - brick.height;
-							//this.bricks.add(brick);
-						} else if (c=='C') {
-							coin = this.add.sprite(x, y, 'coin');
-            				coin.animations.add('spin');
-            				coin.animations.play('spin', 10, true);
-						}
-						if (brick != null) {
-							brick.y = brick.y - brick.height;
-							this.physics.enable(brick, Phaser.Physics.ARCADE);
-							brick.body.allowGravity = false;
-							brick.body.immovable = true;
-							this.bricks.add(brick);
-						}
-						if (coin != null) {
-							coin.y = coin.y - coin.height;
-							this.physics.enable(coin, Phaser.Physics.ARCADE);
-							coin.body.allowGravity = false;
-							coin.body.immovable = true;
-							this.coins.add(coin);
-						}	
-						x = x+100;
-
-					}
-					y = y-100
-                }
-            },
-            
-            processHandlerBricks: function(dude, brick) {
-            	return true;
-            },
-            
-            collisionHandlerBricks: function(dude, brick) {
-            },
-            
-            processHandlerCoins: function(dude, coin) {
-            	return true;
-            },
-            
-            collisionHandlerCoins: function(dude, coin) {
-            	coin.kill();
-                this.sfx.play('zap');
-            	this.score = this.score + 1;
-            	this.scoretext.text = "Score: " + this.score;
-            	
-            },
-            
-            update: function() {
-            	if (this.physics.arcade.collide(this.dude, this.bricks, this.collisionHandlerBricks, this.processHandlerBricks, this)) {
-            		//console.log('boom');
-            	}
-            	if (this.physics.arcade.collide(this.dude, this.coins, this.collisionHandlerCoins, this.processHandlerCoins, this)) {
-            		//console.log('boom');
-            	}
-
-            	
-                this.dude.body.velocity.x = 0;
-
-				if (this.cursors.left.isDown)
-				{
-					this.dude.body.velocity.x = -150;
-
-					if (this.facing != 'left')
-					{
-						this.dude.animations.play('left');
-						this.facing = 'left';
-					}
-				}
-				else if (this.cursors.right.isDown)
-				{
-					this.dude.body.velocity.x = 150;
-
-					if (this.facing != 'right')
-					{
-						this.dude.animations.play('right');
-						this.facing = 'right';
-					}
-				}
-				else
-				{
-					if (this.facing != 'idle')
-					{
-						this.dude.animations.stop();
-
-						if (this.facing == 'left')
-						{
-							this.dude.frame = 0;
-						}
-						else
-						{
-							this.dude.frame = 5;
-						}
-
-						this.facing = 'idle';
-					}
-				}
+	TheGame.PlayState = function(game) {
+		this.cursors;
+		this.graphics;
+		this.bee;
+		this.vx;
+		this.vy;
+		this.floorbricks;
+	};
 	
-				if (this.jumpButton.isDown && this.time.now > this.jumpTimer)
-				{
-					this.dude.body.velocity.y = -250;
-					this.jumpTimer = this.time.now + 750;
-				}
+	TheGame.PlayState.prototype = {
+		preload: function () {
+			this.load.image('happybee', 'assets/happybee.png');
+            this.load.image('brick', '/assets/brickblock.png');
+		},
+		
+		create: function () {
+		
+			this.aiming = false;
+		
+			this.graphics = this.game.add.graphics(0, 0);
 
+            this.game.input.keyboard.onDownCallback = null;		
+					
+			this.world.setBounds(0, 0, this.game.width*2, this.game.height);
+			this.physics.startSystem(Phaser.Physics.ARCADE);
+			this.time.desiredFps = 30;
+			this.physics.arcade.gravity.y = 250;
+			
+			this.bee = this.add.sprite(100, 100, 'happybee');
+			this.bee.anchor.set(0.5, 0.5);
+			this.physics.enable(this.bee, Phaser.Physics.ARCADE);
+			this.bee.body.bounce.y = 0.2;
+			this.bee.body.collideWorldBounds = false;			
+			this.camera.follow(this.bee, Phaser.Camera.FOLLOW_PLATFORMER);
+			
+			this.bee.body.moves = false;
+		
+			this.cursors = this.input.keyboard.createCursorKeys();
+			
+			// Floor
+			this.floorbricks = this.add.physicsGroup();
+			x = 0;
+			while (x < this.game.width*2) {
+				brick = this.add.sprite(x, this.game.height, 'brick');
+				brick.y = brick.y - brick.height;
+				this.physics.enable(brick, Phaser.Physics.ARCADE);
+				brick.body.allowGravity = false;
+				brick.body.immovable = true;
+				this.floorbricks.add(brick);
+				x = x + brick.width;
 			}
-            
-            
-        };
+			
+			
+			this.game.input.onUp.add(function() {
+				if (TheGame.beestate == 1) TheGame.beestate = 2;
+			});
+
+			this.game.input.onDown.add(function() {
+				if (TheGame.beestate == 0) TheGame.beestate = 1;
+			});		
+	
+		},
+		
+		
+		update: function() {
+		
+			if (this.physics.arcade.collide(this.bee, this.floorbricks, null, null, this)) {
+			}
+		
+    		ox = 180;
+    		oy = 180;
+
+			if (TheGame.beestate == 0) {		
+				this.graphics.clear();
+				this.bee.x = ox;
+				this.bee.y = oy;
+			}
+			
+			if (TheGame.beestate == 1) {		
+				this.graphics.clear();
+				this.graphics.lineStyle(2, 0xffd900, 1);
+			
+				x = this.game.input.x;
+				y = this.game.input.y;
+			
+				// Line length
+				d = Math.sqrt(((ox-x)*(ox-x)) + ((oy-y)*(oy-y)));
+			
+				if (d > 100) {
+					t = 100.0 / d;
+					x = ((1.0 - t) * ox) + (t * x);
+					y = ((1.0 - t) * oy) + (t * y);
+				}
+				
+				this.vx = ox - x;
+				this.vy = oy - y;
+				
+				this.graphics.moveTo(ox, oy);
+				this.graphics.lineTo(x, y);
+				this.bee.x = x;
+				this.bee.y = y;
+    		}
+    		
+			if (TheGame.beestate == 2) {
+				// Launch
+				this.graphics.clear();
+				this.bee.body.moves = true;
+				
+				this.bee.body.velocity.x = this.vx * 10;
+				this.bee.body.velocity.y = this.vy * 10;
+				
+				TheGame.beestate = 3;
+			}	
+			
+			if (TheGame.beestate == 3) {
+				// Flying
+			}
+		}
+		
+	};
         
-        window.onload = function() {
-            var game = new Phaser.Game("100", "100", Phaser.AUTO);
-            
-            game.state.add('Play', TheGame.PlayState);
-            
-            game.state.start('Play');
-        };
+	window.onload = function() {
+		var game = new Phaser.Game("100", "100", Phaser.AUTO);
+		
+		game.state.add('Play', TheGame.PlayState);
+		
+		game.state.start('Play');
+	};
         
         
         </script>
