@@ -18,12 +18,30 @@
     <body>
         <script type="text/javascript">
         
-    TheGame.beestate = 0;
+    // Bee States
+    var BEE_STATE_PREPARE = 0;
+    var BEE_STATE_WAITING = 1;
+    var BEE_STATE_AIMING = 2;
+    var BEE_STATE_LAUNCHING = 3;
+	var BEE_STATE_FLYING = 4;
+        
+    // Start Drag Point
+    var START_X = 180.0;
+    var START_Y = 180.0;
+    
+    // Max Line Length
+    var MAX_LINE_LEN = 100.0;
+    
+    // Shot Strength Multiplier
+    var SHOT_STRENGTH = 10.0;
+        
+    TheGame.beestate = BEE_STATE_PREPARE;
 
 	TheGame.PlayState = function(game) {
 		this.cursors;
 		this.graphics;
 		this.bee;
+		this.pointer;
 		this.vx;
 		this.vy;
 		this.floorbricks;
@@ -35,16 +53,17 @@
 	TheGame.PlayState.prototype = {
 		preload: function () {
 			this.load.image('happybee', 'assets/happybee.png');
+			this.load.image('beepointer', 'assets/beepointer.png');
 			this.load.image('blueflower', 'assets/BlueFlower.png');
             this.load.image('brick', '/assets/brickblock.png');
 		},
 		
         checkForEnd: function() {
-            if (TheGame.beestate != 4) return;
+            if (TheGame.beestate != BEE_STATE_FLYING) return;
 
 			if ((Math.abs(this.bee.x - this.lastbeex) < 1) && 
 				(Math.abs(this.bee.y - this.lastbeey) < 1)) {
-				TheGame.beestate = 0;				    
+				TheGame.beestate = BEE_STATE_PREPARE;				    
 			}
 			
 			this.lastbeex = this.bee.x;
@@ -71,6 +90,8 @@
 		
 		create: function () {
 		
+			this.game.stage.backgroundColor = "#ee9494";
+		
 			this.aiming = false;
 		
 			this.graphics = this.game.add.graphics(0, 0);
@@ -90,6 +111,8 @@
 			this.camera.follow(this.bee, Phaser.Camera.FOLLOW_PLATFORMER);
 			
 			this.bee.body.moves = false;
+			
+			this.beepointer = this.add.sprite(0, -100, 'beepointer');
 		
 			this.cursors = this.input.keyboard.createCursorKeys();
 			
@@ -123,11 +146,11 @@
             this.game.time.events.loop(Phaser.Timer.SECOND * 2, this.checkForEnd, this);
 			
 			this.game.input.onUp.add(function() {
-				if (TheGame.beestate == 2) TheGame.beestate = 3;
+				if (TheGame.beestate == BEE_STATE_AIMING) TheGame.beestate = BEE_STATE_LAUNCHING;
 			});
 
 			this.game.input.onDown.add(function() {
-				if (TheGame.beestate == 1) TheGame.beestate = 2;
+				if (TheGame.beestate == BEE_STATE_WAITING) TheGame.beestate = BEE_STATE_AIMING;
 			});		
 	
 		},
@@ -148,22 +171,29 @@
 			if (this.physics.arcade.collide(this.bee, this.flowers, this.collisionHandlerFlower, null, this)) {
 			}
 			
-    		ox = 180;
-    		oy = 180;
+			this.beepointer.x = this.bee.x;
+			if (this.bee.y < -20) {
+				this.beepointer.y = 5;
+			} else {
+				this.beepointer.y = -100;
+			}
+			
+    		ox = START_X;
+    		oy = START_Y;
     		
-			if (TheGame.beestate == 0) {	
+			if (TheGame.beestate == BEE_STATE_PREPARE) {	
 	    		this.makeFlowers();
-				TheGame.beestate = 1;
+				this.bee.body.moves = false;
+				TheGame.beestate = BEE_STATE_WAITING;
     		}
 
-			if (TheGame.beestate == 1) {	
-				this.bee.body.moves = false;
+			if (TheGame.beestate == BEE_STATE_WAITING) {	
 				this.graphics.clear();
 				this.bee.x = ox;
 				this.bee.y = oy;
 			}
 			
-			if (TheGame.beestate == 2) {		
+			if (TheGame.beestate == BEE_STATE_AIMING) {		
 				this.graphics.clear();
 				this.graphics.lineStyle(4, 0xffd900, 1);
 			
@@ -173,8 +203,8 @@
 				// Line length
 				d = Math.sqrt(((ox-x)*(ox-x)) + ((oy-y)*(oy-y)));
 			
-				if (d > 100) {
-					t = 100.0 / d;
+				if (d > MAX_LINE_LEN) {
+					t = MAX_LINE_LEN / d;
 					x = ((1.0 - t) * ox) + (t * x);
 					y = ((1.0 - t) * oy) + (t * y);
 				}
@@ -188,28 +218,28 @@
 				this.bee.y = y;
     		}
     		
-			if (TheGame.beestate == 3) {
+			if (TheGame.beestate == BEE_STATE_LAUNCHING) {
 				// Launch
 				this.graphics.clear();
 				this.bee.body.moves = true;
 				
-				this.bee.body.velocity.x = this.vx * 10;
-				this.bee.body.velocity.y = this.vy * 10;
+				this.bee.body.velocity.x = this.vx * SHOT_STRENGTH;
+				this.bee.body.velocity.y = this.vy * SHOT_STRENGTH;
 				
 				this.lastbeex = this.bee.x;
 				this.lastbeey = this.bee.y;
 				
-				TheGame.beestate = 4;
+				TheGame.beestate = BEE_STATE_FLYING;
 			}	
 			
-			if (TheGame.beestate == 4) {
+			if (TheGame.beestate == BEE_STATE_FLYING) {
 				// Flying
 				if (this.bee.x < 0) {
-					TheGame.beestate = 0;
+					TheGame.beestate = BEE_STATE_PREPARE;
 				}				
 				
 				if (this.bee.x > this.game.width*2) {
-					TheGame.beestate = 0;
+					TheGame.beestate = BEE_STATE_PREPARE;
 				}				
 				
 			}
