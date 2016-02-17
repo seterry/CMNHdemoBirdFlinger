@@ -29,16 +29,18 @@
 		this.floorbricks;
 		this.lastbeex;
 		this.lastbeey;
+		this.flowers;
 	};
 	
 	TheGame.PlayState.prototype = {
 		preload: function () {
 			this.load.image('happybee', 'assets/happybee.png');
+			this.load.image('blueflower', 'assets/BlueFlower.png');
             this.load.image('brick', '/assets/brickblock.png');
 		},
 		
         checkForEnd: function() {
-            if (TheGame.beestate != 3) return;
+            if (TheGame.beestate != 4) return;
 
 			if ((Math.abs(this.bee.x - this.lastbeex) < 1) && 
 				(Math.abs(this.bee.y - this.lastbeey) < 1)) {
@@ -49,6 +51,23 @@
 			this.lastbeey = this.bee.y;
         },
 		
+		makeFlowers: function() {
+			if (this.flowers != null) this.flowers.destroy(true);
+			
+			this.flowers = this.add.physicsGroup();
+		
+			flower = this.add.sprite(800, this.game.height, 'blueflower');
+			this.physics.enable(flower, Phaser.Physics.ARCADE);
+			flower.y -= flower.height;
+			flower.body.allowGravity = false;
+			this.flowers.add(flower);			
+			
+			flower = this.add.sprite(1800, this.game.height, 'blueflower');
+			this.physics.enable(flower, Phaser.Physics.ARCADE);
+			flower.y -= flower.height;
+			flower.body.allowGravity = false;
+			this.flowers.add(flower);			
+		},
 		
 		create: function () {
 		
@@ -91,7 +110,7 @@
 				lasty = brick.y;
 				x = x + brick.width;
 			}
-
+			
 			while (lasty > 0) {
 				brick = this.add.sprite(lastx, lasty, 'brick');
 				this.physics.enable(brick, Phaser.Physics.ARCADE);
@@ -100,15 +119,15 @@
 				this.floorbricks.add(brick);
 				lasty = lasty - brick.height;
 			}	
-			
+						
             this.game.time.events.loop(Phaser.Timer.SECOND * 2, this.checkForEnd, this);
 			
 			this.game.input.onUp.add(function() {
-				if (TheGame.beestate == 1) TheGame.beestate = 2;
+				if (TheGame.beestate == 2) TheGame.beestate = 3;
 			});
 
 			this.game.input.onDown.add(function() {
-				if (TheGame.beestate == 0) TheGame.beestate = 1;
+				if (TheGame.beestate == 1) TheGame.beestate = 2;
 			});		
 	
 		},
@@ -117,22 +136,34 @@
 			bee.body.velocity.x *= 0.9;
 		},
 		
+		collisionHandlerFlower: function(bee, flower) {
+			flower.kill();
+		},
+		
 		update: function() {
 		
 			if (this.physics.arcade.collide(this.bee, this.floorbricks, this.collisionHandlerFloor, null, this)) {
 			}
 		
+			if (this.physics.arcade.collide(this.bee, this.flowers, this.collisionHandlerFlower, null, this)) {
+			}
+			
     		ox = 180;
     		oy = 180;
-
+    		
 			if (TheGame.beestate == 0) {	
+	    		this.makeFlowers();
+				TheGame.beestate = 1;
+    		}
+
+			if (TheGame.beestate == 1) {	
 				this.bee.body.moves = false;
 				this.graphics.clear();
 				this.bee.x = ox;
 				this.bee.y = oy;
 			}
 			
-			if (TheGame.beestate == 1) {		
+			if (TheGame.beestate == 2) {		
 				this.graphics.clear();
 				this.graphics.lineStyle(4, 0xffd900, 1);
 			
@@ -157,7 +188,7 @@
 				this.bee.y = y;
     		}
     		
-			if (TheGame.beestate == 2) {
+			if (TheGame.beestate == 3) {
 				// Launch
 				this.graphics.clear();
 				this.bee.body.moves = true;
@@ -168,10 +199,10 @@
 				this.lastbeex = this.bee.x;
 				this.lastbeey = this.bee.y;
 				
-				TheGame.beestate = 3;
+				TheGame.beestate = 4;
 			}	
 			
-			if (TheGame.beestate == 3) {
+			if (TheGame.beestate == 4) {
 				// Flying
 				if (this.bee.x < 0) {
 					TheGame.beestate = 0;
