@@ -10,7 +10,7 @@
             }
         </style>
         <script type="text/javascript">
-            var TheGame = {};
+            var GameStates = {};
             </script>
         <script src="phaser.min.js"></script>
         <script src="gyro.min.js"></script>
@@ -35,23 +35,12 @@
     // Shot Strength Multiplier
     var SHOT_STRENGTH = 10.0;
         
-    TheGame.beestate = BEE_STATE_PREPARE;
-
-	TheGame.PlayState = function(game) {
-		this.cursors;
-		this.graphics;
-		this.bee;
-		this.pointer;
-		this.vx;
-		this.vy;
-		this.floorbricks;
-		this.lastbeex;
-		this.lastbeey;
-		this.flowers;
+	GameStates.PlayState = function(game) {
 	};
 	
-	TheGame.PlayState.prototype = {
+	GameStates.PlayState.prototype = {
 		preload: function () {
+			this.beestate = BEE_STATE_PREPARE;
 			this.load.image('happybee', 'assets/happybee.png');
 			this.load.image('beepointer', 'assets/beepointer.png');
 			this.load.image('blueflower', 'assets/BlueFlower.png');
@@ -59,11 +48,11 @@
 		},
 		
         checkForEnd: function() {
-            if (TheGame.beestate != BEE_STATE_FLYING) return;
+            if (this.beestate != BEE_STATE_FLYING) return;
 
 			if ((Math.abs(this.bee.x - this.lastbeex) < 1) && 
 				(Math.abs(this.bee.y - this.lastbeey) < 1)) {
-				TheGame.beestate = BEE_STATE_PREPARE;				    
+				this.beestate = BEE_STATE_PREPARE;				    
 			}
 			
 			this.lastbeex = this.bee.x;
@@ -118,9 +107,9 @@
 			
 			// Floor
 			this.floorbricks = this.add.physicsGroup();
-			x = 0;
-			lastx = 0;
-			lasty = 0;
+			var x = 0;
+			var lastx = 0;
+			var lasty = 0;
 			while (x < this.game.width*2) {
 				brick = this.add.sprite(x, this.game.height, 'brick');
 				brick.y = brick.y - brick.height/2.0;
@@ -146,11 +135,13 @@
             this.game.time.events.loop(Phaser.Timer.SECOND * 2, this.checkForEnd, this);
 			
 			this.game.input.onUp.add(function() {
-				if (TheGame.beestate == BEE_STATE_AIMING) TheGame.beestate = BEE_STATE_LAUNCHING;
+				var me = TheGame.state.states.Play;
+				if (me.beestate == BEE_STATE_AIMING) me.beestate = BEE_STATE_LAUNCHING;
 			});
 
 			this.game.input.onDown.add(function() {
-				if (TheGame.beestate == BEE_STATE_WAITING) TheGame.beestate = BEE_STATE_AIMING;
+				var me = TheGame.state.states.Play;
+				if (me.beestate == BEE_STATE_WAITING) me.beestate = BEE_STATE_AIMING;
 			});		
 	
 		},
@@ -178,30 +169,30 @@
 				this.beepointer.y = -100;
 			}
 			
-    		ox = START_X;
-    		oy = START_Y;
+    		var ox = START_X;
+    		var oy = START_Y;
     		
-			if (TheGame.beestate == BEE_STATE_PREPARE) {	
+			if (this.beestate == BEE_STATE_PREPARE) {	
 	    		this.makeFlowers();
 				this.bee.body.moves = false;
-				TheGame.beestate = BEE_STATE_WAITING;
+				this.beestate = BEE_STATE_WAITING;
     		}
 
-			if (TheGame.beestate == BEE_STATE_WAITING) {	
+			if (this.beestate == BEE_STATE_WAITING) {	
 				this.graphics.clear();
 				this.bee.x = ox;
 				this.bee.y = oy;
 			}
 			
-			if (TheGame.beestate == BEE_STATE_AIMING) {		
+			if (this.beestate == BEE_STATE_AIMING) {		
 				this.graphics.clear();
 				this.graphics.lineStyle(4, 0xffd900, 1);
 			
-				x = this.game.input.x;
-				y = this.game.input.y;
+				var x = this.game.input.x;
+				var y = this.game.input.y;
 			
 				// Line length
-				d = Math.sqrt(((ox-x)*(ox-x)) + ((oy-y)*(oy-y)));
+				var d = Math.sqrt(((ox-x)*(ox-x)) + ((oy-y)*(oy-y)));
 			
 				if (d > MAX_LINE_LEN) {
 					t = MAX_LINE_LEN / d;
@@ -218,7 +209,7 @@
 				this.bee.y = y;
     		}
     		
-			if (TheGame.beestate == BEE_STATE_LAUNCHING) {
+			if (this.beestate == BEE_STATE_LAUNCHING) {
 				// Launch
 				this.graphics.clear();
 				this.bee.body.moves = true;
@@ -229,17 +220,17 @@
 				this.lastbeex = this.bee.x;
 				this.lastbeey = this.bee.y;
 				
-				TheGame.beestate = BEE_STATE_FLYING;
+				this.beestate = BEE_STATE_FLYING;
 			}	
 			
-			if (TheGame.beestate == BEE_STATE_FLYING) {
+			if (this.beestate == BEE_STATE_FLYING) {
 				// Flying
 				if (this.bee.x < 0) {
-					TheGame.beestate = BEE_STATE_PREPARE;
+					this.beestate = BEE_STATE_PREPARE;
 				}				
 				
 				if (this.bee.x > this.game.width*2) {
-					TheGame.beestate = BEE_STATE_PREPARE;
+					this.beestate = BEE_STATE_PREPARE;
 				}				
 				
 			}
@@ -248,11 +239,11 @@
 	};
         
 	window.onload = function() {
-		var game = new Phaser.Game("100", "100", Phaser.AUTO);
+		TheGame = new Phaser.Game("100", "100", Phaser.AUTO);
 		
-		game.state.add('Play', TheGame.PlayState);
+		TheGame.state.add('Play', GameStates.PlayState);
 		
-		game.state.start('Play');
+		TheGame.state.start('Play');
 	};
         
         
