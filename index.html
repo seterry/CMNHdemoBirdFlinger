@@ -45,8 +45,8 @@
 			this.load.image('happybee', 'assets/happybee.png');
 			this.load.image('beepointer', 'assets/beepointer.png');
 			this.load.image('blueflower', 'assets/BlueFlower.png');
-            this.load.image('brick', '/assets/brickblock.png');
-            this.load.image('droplet', '/assets/droplet.png');
+            this.load.image('brick', 'assets/BrickBlock.png');
+            this.load.image('droplet', 'assets/droplet.png');
 		},
 				
         checkForEnd: function() {
@@ -71,7 +71,7 @@
 			
 			for (var i = 0; i < startPos.length; i++) {
 		
-				flower = this.add.sprite(startPos[i], this.game.height - 50, 'blueflower');
+				flower = this.add.sprite((startPos[i]/100.0) * this.game.width * 2, this.game.height - 50, 'blueflower');
 				this.physics.enable(flower, Phaser.Physics.ARCADE);
 				flower.y -= flower.height;
 				flower.body.allowGravity = false;
@@ -292,7 +292,7 @@
 	window.onload = function() {
 		TheGame = new Phaser.Game("100", "100", Phaser.AUTO);
 		
-		TheGame.beelevels = [ [800, 1800], [800, 1200, 1800], [500, 1350, 1450] ]; 
+		TheGame.beelevels = [ [20, 80], [20, 60, 80], [20, 50, 90] ];
 		TheGame.beelevel = 0;
 		
 		TheGame.state.add('Play', GameStates.PlayState);
