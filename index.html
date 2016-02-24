@@ -47,6 +47,8 @@
 			this.load.image('blueflower', 'assets/BlueFlower.png');
             this.load.image('brick', 'assets/BrickBlock.png');
             this.load.image('droplet', 'assets/droplet.png');
+            
+			this.load.audio('sfx', 'assets/drip.mp3');
 		},
 				
         checkForEnd: function() {
@@ -117,6 +119,10 @@
 			this.beepointer = this.add.sprite(0, -100, 'beepointer');
 		
 			this.cursors = this.input.keyboard.createCursorKeys();
+			
+			this.sfx = this.add.audio('sfx');
+			this.sfx.allowMultiple = true;
+			this.sfx.addMarker('bop', 0, 0.375);
 			
 			// Floor
 			this.floorbricks = this.add.physicsGroup();
@@ -193,6 +199,8 @@
 			emitter.y = flower.y; 
 			emitter.start(true, 2000, null, 20);
 
+			this.sfx.play('bop');
+			
 			flower.kill();
 			this.score = this.score - 1;
 			this.scoretext.text = "Score: " + this.score;
